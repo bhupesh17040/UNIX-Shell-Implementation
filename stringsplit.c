@@ -1,4 +1,4 @@
-#include<stdio.h>  // THE FOLLOWING CODE TAKES INPUT COMMAND AS STRING AND SEPERATES IT ACROSS  |
+#include<stdio.h>  // THE FOLLOWING CODE TAKES INPUT COMMAND AS STRING AND SEPERATES IT ACROSS  |  , exits if the command is exit
 #include <string.h>
 
 int  main()
@@ -6,7 +6,12 @@ int  main()
     char sentence[50];
     printf("enter command\n");
     gets(sentence);
-    
+    if( 0 == strcmp(sentence, "exit") )
+    {
+        printf( "equal" );
+        exit(0);
+    }
+    printf("token");
     char *token = strtok(sentence, "|");
     
     
@@ -20,3 +25,4 @@ int  main()
     
     
 }
+
