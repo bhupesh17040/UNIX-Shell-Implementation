@@ -1,4 +1,4 @@
-#include<stdio.h>  // THE FOLLOWING CODE TAKES INPUT COMMAND AS STRING AND SEPERATES IT ACROSS  |  , exits if the command is exit
+#include<stdio.h>  // THE FOLLOWING CODE TAKES INPUT COMMAND AS STRING AND SEPERATES IT ACROSS  |
 #include <string.h>
 
 int  main()
@@ -14,15 +14,16 @@ int  main()
     printf("token");
     char *token = strtok(sentence, "|");
     
-    
+    int q=0; // variable to count |
     while (token != NULL)
     {
         printf("%s\n", token);
         token = strtok(NULL, "|");
+        q=q+1;
     }
     
+    printf("%d\n", q-1);
     return 0;
     
     
 }
-
