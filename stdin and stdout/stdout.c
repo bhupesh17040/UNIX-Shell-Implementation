@@ -19,11 +19,8 @@ int main(void)
     
 
     fclose(stdout);
-     freopen("redir.txt","r",stdin);
-     dup2(fileno(stdin), STDIN_FILENO);
-   
-     execlp("wc","wc",NULL);
-     fclose(stdin);
+    
+     
     }
    
 
