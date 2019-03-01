@@ -8,10 +8,8 @@ int  main()
     gets(sentence);
     if( 0 == strcmp(sentence, "exit") )
     {
-        printf( "equal" );
         exit(0);
     }
-    printf("token");
     char *token = strtok(sentence, "|");
     
     int q=0; // variable to count |
@@ -27,3 +25,6 @@ int  main()
     
     
 }
+
+
+
