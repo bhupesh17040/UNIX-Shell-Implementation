@@ -39,6 +39,9 @@ void aredirect_output(char command[] , char fn[]){
     
     
 }
+void redirect_error_to_out(){
+    dup2(1,2); // duplicates fd[1] to fd[2]
+}
 
 
 
