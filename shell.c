@@ -1,4 +1,3 @@
-#include<stdio.h>  
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,6 +38,22 @@ void aredirect_output(char command[] , char fn[]){
     
     
 }
+void redirect_error_to_out(){
+    dup2(1,2); // duplicates fd[1] to fd[2]
+}
+
+void redirectfromfile(char command[],char fn[])  // command<filename
+{
+	close(0);
+	freopen(fn,"r",stdin);
+	int pid;
+	pid=fork();
+	if(pid==0)
+	{
+		execlp(command,command,NULL);
+	}
+	fclose(stdin);
+}
 
 /*
 * Function to carry out pipelining. It takes a single string as its input,
@@ -75,36 +90,48 @@ void pipefn (char *a[], char *b[])
 }
 
 
-
-
 int  main()
 {
+    while(1)
+    {
     char sentence[50];
     printf("enter command\n");
     gets(sentence);
-    if( 0 == strcmp(sentence, "exit") )
+    if(strcmp(sentence,"exit")==0)
     {
         exit(0);
     }
-    char *token = strtok(sentence, "|");
-    const char *array[2]; // array for inputs
-
-    int q=0; // variable to count |
-    while (token != NULL)
+    int countpipe=0;
+    int countout=0;
+    int countin=0;
+    int countappend=0;
+    int countfd=0;
+    for(int i=0;i<strlen(sentence);++i)
     {
-        array[q]=token;
-        //printf("%s\n", token);
-        token = strtok(NULL, "|");
-        
-        //printf("%s\n", a[q]);
-        q=q+1;
+        if(sentence[i]=='|')
+        {
+            countpipe=countpipe+1;
+        }
+        else if(sentence[i]=='<')
+        {
+            countout=countout+1;
+        }
+        else if(sentence[i]=='>')
+        {
+            if(sentence[i+1]=='>'){
+                countappend=countappend+1;
+            }
+            else if(sentence[i+1]=='&')
+            {
+                countfd=countfd+1;
+            }
+            else
+            {countin=countin+1;
+            }
+        }
+        }
+    printf("%d\n",countappend);
     }
-    
-    //printf("%d\n", q-1);
-    return 0;
-    
-    
+ 
+ // Will proceed when pipelining would be done completely   
 }
-
-
-
