@@ -1,4 +1,3 @@
-#include<stdio.h>  
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,6 +40,19 @@ void aredirect_output(char command[] , char fn[]){
 }
 void redirect_error_to_out(){
     dup2(1,2); // duplicates fd[1] to fd[2]
+}
+
+void redirectfromfile(char command[],char fn[])  // command<filename
+{
+	close(0);
+	freopen(fn,"r",stdin);
+	int pid;
+	pid=fork();
+	if(pid==0)
+	{
+		execlp(command,command,NULL);
+	}
+	fclose(stdin);
 }
 
 /*
