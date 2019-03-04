@@ -45,55 +45,32 @@ void aredirect_output(char command[] , char fn[]){
 * which it then splits according to the pipe delimiter "|". An error is thrown
 * if a pipe cannot be created or forking fails.
 */
-void pipefn (char str[])
+void pipefn (char *a[], char *b[])
 {
-    char *const *argv1;
-    char *const *argv2;
-
-    argv1 = strtok(str, "|");              // store command left of pipe in arg1
-    argv2 = strtok(NULL, "|");             // store command right of pipe in arg2
-
-    // argv1[1] = 0;
-    // argv1[1] = 0;
-
-    // char *bin = "/bin/";                        // string to store prefix of paths
-
-    // allocate enough memory for prefix path, command and null character at the end
-    // char *cmd1 = malloc( strlen(argv1[0]) + 6 );    // variable for left command
-    // char *cmd2 = malloc( strlen(argv2[0]) + 6 );    // variable for right command
-
-    // append prefix path to both cmd1 and cmd2
-    // strcat(cmd1, bin);
-    // strcat(cmd2, bin);
-
-    // append command from arg1 and arg2 to cmd 1 and cmd 2, respectively, to complete paths
-    // strcat(cmd1, argv1[0]);
-    // strcat(cmd2, argv2[0]);
-
     int fd[2];
     if (pipe(fd) == -1)
     {
         perror("Error creating pipe!");
     }
-    pid_t pid = fork();
-    if (pid == -1)
-    {
-        perror("Error forking process!");
-    }
-    else if (pid == 1)
+    int pid = fork();
+    if (pid)
     {
         close(fd[0]);
         dup2(fd[1], 1);
         // dup2 lets you choose the file descriptor
         // number that will be assigned and atomically
         // closes and replaces it if it's already taken.
-        execlp(argv1, argv1, NULL);
+        execv(a[0], a);
     }
-    else if (pid == 0)
+    else if (!pid)
     {
-        close(fd[0]);
-        dup2(fd[1], 1);
-        execv(argv2, argv2);
+        close(fd[1]);
+        dup2(fd[0], 0);
+        execv(b[0], b);
+    }
+    else
+    {
+        perror("Error forking process!");
     }
 }
 
