@@ -56,11 +56,11 @@ void redirectfromfile(char command[],char fn[])  // command<filename
 }
 
 /*
-* Function to carry out pipelining. It takes a single string as its input,
-* which it then splits according to the pipe delimiter "|". An error is thrown
-* if a pipe cannot be created or forking fails.
+* Function to carry out pipelining. It takes two constant pointers to char arrays
+* as input. An error is thrown if a pipe cannot be created or forking fails.
+* "execvp" is used to execute commands with a variable number of arguments.
 */
-void pipefn (char *a[], char *b[])
+void pipefn (char *const a[], char *const b[])
 {
     int fd[2];
     if (pipe(fd) == -1)
@@ -70,18 +70,19 @@ void pipefn (char *a[], char *b[])
     int pid = fork();
     if (pid)
     {
+        wait(NULL);
         close(fd[0]);
         dup2(fd[1], 1);
         // dup2 lets you choose the file descriptor
         // number that will be assigned and atomically
         // closes and replaces it if it's already taken.
-        execv(a[0], a);
+        execvp(a[0], a);
     }
     else if (!pid)
     {
         close(fd[1]);
         dup2(fd[0], 0);
-        execv(b[0], b);
+        execvp(b[0], b);
     }
     else
     {
@@ -94,43 +95,62 @@ int  main()
 {
     while(1)
     {
-    char sentence[50];
-    printf("enter command\n");
-    gets(sentence);
-    if(strcmp(sentence,"exit")==0)
-    {
-        exit(0);
-    }
-    int countpipe=0;
-    int countout=0;
-    int countin=0;
-    int countappend=0;
-    int countfd=0;
-    for(int i=0;i<strlen(sentence);++i)
-    {
-        if(sentence[i]=='|')
+        char sentence[50];
+        printf("enter command\n");
+        gets(sentence);
+        if(strcmp(sentence,"exit")==0)
         {
-            countpipe=countpipe+1;
+            exit(0);
         }
-        else if(sentence[i]=='<')
+        int countpipe=0;
+        int countout=0;
+        int countin=0;
+        int countappend=0;
+        int countfd=0;
+        for(int i=0;i<strlen(sentence);++i)
         {
-            countout=countout+1;
-        }
-        else if(sentence[i]=='>')
-        {
-            if(sentence[i+1]=='>'){
-                countappend=countappend+1;
-            }
-            else if(sentence[i+1]=='&')
+            if(sentence[i]=='|')
             {
-                countfd=countfd+1;
+                countpipe=countpipe+1;
             }
-            else
-            {countin=countin+1;
+            else if(sentence[i]=='<')
+            {
+                countout=countout+1;
+            }
+            else if(sentence[i]=='>')
+            {
+                if(sentence[i+1]=='>')
+                {
+                    countappend=countappend+1;
+                }
+                else if(sentence[i+1]=='&')
+                {
+                    countfd=countfd+1;
+                }
+                else
+                {countin=countin+1;
+                }
             }
         }
+        if (countpipe==0 && countout==0 && countin==0 && countappend==0 && countfd==0)
+        {
+            system(sentence);
         }
-    printf("%d\n",countappend);
+        else
+        {
+            int i = 0;
+            char *p = strtok(sentence, "|");
+            char *array[50];
+            while (p != NULL)
+            {
+                array[i++] = p;
+                p = strtok (NULL, "|");
+            }
+            for (int j = 0; j < i; j++)
+            {
+                printf("%s\n", array[j]);
+            }
+        }
     }
  
  // Will proceed when pipelining would be done completely   
