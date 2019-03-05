@@ -5,40 +5,34 @@
 #include<errno.h>
 #include<sys/wait.h>
 #include <unistd.h>
-void redirect_output(char command[] , char fn[]){
+
+void redirect_output(char command[] , char fn[])
+{
     freopen(fn,"w",stdout);
     dup2(fileno(stdout), 1);
-    
-    
     execlp(command,command,NULL);
     fclose(stdout);
     
-    
-    
 }
-void redirect_error(char command[] , char fn[]){
+
+void redirect_error(char command[] , char fn[])
+{
     freopen(fn,"w",stderr);
     dup2(fileno(stderr), STDERR_FILENO);
-
-    
     execlp(command,command,NULL);
     fclose(stderr);
     
-    
-    
 }
-void aredirect_output(char command[] , char fn[]){
+
+void aredirect_output(char command[] , char fn[])
+ {
     freopen(fn,"a",stdout);
     dup2(fileno(stdout), 1);
-    
-    
     execlp(command,command,NULL);
     fclose(stdout);
-    
-    
-    
-}
-void redirect_error_to_out(){
+    }
+void redirect_error_to_out()
+{
     dup2(1,2); // duplicates fd[1] to fd[2]
 }
 
@@ -48,7 +42,7 @@ void redirectfromfile(char command[],char fn[])  // command<filename
 	freopen(fn,"r",stdin);
 	int pid;
 	pid=fork();
-	if(pid==0)
+	if(!pid)
 	{
 		execlp(command,command,NULL);
 	}
@@ -72,10 +66,7 @@ void pipefn (char *const a[], char *const b[])
     {
         wait(NULL);
         close(fd[0]);
-        dup2(fd[1], 1);
-        // dup2 lets you choose the file descriptor
-        // number that will be assigned and atomically
-        // closes and replaces it if it's already taken.
+        dup2(fd[1], 1);// dup2 lets you choose the file descriptor number that will be assigned and atomically closes and replaces it if it's already taken.
         execvp(a[0], a);
     }
     else if (!pid)
@@ -132,9 +123,30 @@ int  main()
                 }
             }
         }
-        if (countpipe==0 && countout==0 && countin==0 && countappend==0 && countfd==0)
+        if (countpipe==0 && countout==0 && countin==0 && countappend==0 && countfd==0) // This is the case when there is an internal command.
         {
-            system(sentence);
+            int j=0;
+            char *p1=strtok(sentence," ");
+            char *a1[3];
+            while(p1!=NULL)
+            {
+                a1[j++]=p1;
+                p1=strtok(NULL," ");
+            }
+            for(int y=0;y<j;y++)
+            {
+                if(strcmp(a1[y],"cd")==0)  // Implementing cd on my own.
+                {
+                    char e[100];
+                    chdir(a1[y+1]);
+                    printf("%s \n",getcwd(e,100));
+
+                }
+                else
+                {
+                    system(sentence);
+                }
+            }
         }
         else
         {
@@ -153,5 +165,4 @@ int  main()
         }
     }
  
- // Will proceed when pipelining would be done completely   
 }
