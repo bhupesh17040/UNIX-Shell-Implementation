@@ -19,6 +19,8 @@ ROLL NO.-2017103
 #include <ctype.h>
 #include<signal.h>
 
+/* 0644 indicates permissions */
+
 /*
 * redirect stdout to file “filename”. If the file does not exist create one,
 * otherwise, overwrite the existing file
@@ -55,7 +57,7 @@ void appendOutputToFile (char *file)
 */
 void appendErrorToFile (char *file)
 {
-    int o = open(file, O_CREAT|O_APPEND|O_WRONLY, 0644);
+    int o = open(file, O_CREAT|O_APPEND|O_WRONLY, 0644);  
     dup2(o, STDERR_FILENO);
     close(o);
 }
@@ -80,7 +82,7 @@ void redirectFileToInput (char *file)
 }
 
 /*
-*
+* Function to check the type of redirection operator(">",">>",">&","<").It calls the corresponding operator function
 */
 int checkRedirection (char *p)
 {
@@ -255,7 +257,7 @@ int  main ()
         char sentence[100];
         printf("Shell$ ");
         fgets(sentence, 100, stdin);
-        if(strcmp(trim(sentence),"exit")==0)
+        if(strcmp(trim(sentence),"exit")==0)  /* Exit from the shell program */
         {
             exit(0);
         }
@@ -306,7 +308,7 @@ int  main ()
                 {
                     char e[100];
                     chdir(a1[y+1]);
-                    printf("%s \n",getcwd(e,100));
+                    printf("%s \n",getcwd(e,100)); // Printing the directory to check function validity.Prints the current directory
                 }
                 else
                 {
