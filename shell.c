@@ -57,11 +57,6 @@ void redirectfromfile(char command[],char fn[])  // command<filename
 */
 void pipefn (char *const cmds[], int lenCmds)
 {
-    // for (int j = 0; j < lenCmds; j++)
-    //         {
-    //             printf("%s\n", cmds[j]);
-    //         }
-    //         printf("%d",lenCmds);
     int fd[2];
     int pid;
     int outputStorage = 0;
@@ -84,8 +79,16 @@ void pipefn (char *const cmds[], int lenCmds)
             dup2(fd[1], 1);
             // dup2 lets you choose the file descriptor number that will be
             // assigned and atomically closes and replaces it if it's already taken.
-            char *temp[] = {cmds[i], NULL};
-            execvp(cmds[i], temp);
+            int j = 0;
+            char *p = strtok(cmds[i], " ");
+            char *temp[3];
+            while (p != NULL)
+            {
+                temp[j++] = p;
+                p = strtok (NULL, " ");
+            }
+            temp[j] = NULL;
+            execvp(temp[0], temp);
         }
         else
         {
@@ -100,7 +103,15 @@ void pipefn (char *const cmds[], int lenCmds)
                 wait(NULL);
                 close(fd[1]);
                 dup2(fd[0], 0);
-                char *temp[] = {cmds[i+1], NULL};
+                int k = 0;
+                char *p = strtok(cmds[i+1], " ");
+                char *temp[3];
+                while (p != NULL)
+                {
+                    temp[k++] = p;
+                    p = strtok (NULL, " ");
+                }
+                temp[k] = NULL;
                 execvp(cmds[i+1], temp);
             }
         }
@@ -109,25 +120,28 @@ void pipefn (char *const cmds[], int lenCmds)
 
 }
 
-char *trim(char *s)
+/*
+* Function referred from: cboard.cprogramming.com/c-programming/31839-trim-string-function-code.html
+*/
+char *trim(char *cmd)
 {
-    int i = 0;
-    int j = strlen ( s ) - 1;
-    int k = 0;
-    while ( isspace ( s[i] ) && s[i] != '\0' )
+    int a = strlen ( cmd ) - 1;
+    while ( isspace ( cmd[a] ) && a >= 0 )
     {
-        i++;
+        a--;
     }
-    while ( isspace ( s[j] ) && j >= 0 )
+    int b = 0;
+    while ( isspace ( cmd[b] ) && cmd[b] != '\0' )
     {
-        j--;
+        b++;
     }
-    while ( i <= j )
+    int c = 0;
+    while ( b <= a )
     {
-        s[k++] = s[i++];
+        cmd[c++] = cmd[b++];
     }
-    s[k] = '\0';
-    return s;
+    cmd[c] = '\0';
+    return cmd;
 }
 
 int  main()
