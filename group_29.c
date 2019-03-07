@@ -1,3 +1,14 @@
+/*
+ASSIGNMENT 2
+GROUP ID-29
+GROUP MEMBERS-
+NAME-BHUPESH SINGH KAINTH
+ROLL NO.-2017040
+NAME- SHLOAK AGGARWAL
+ROLL NO.-2017107
+NAME-SHASHWAT JAIN
+ROLL NO.-2017103
+*/
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,6 +17,7 @@
 #include<sys/wait.h>
 #include <unistd.h>
 #include <ctype.h>
+#include<signal.h>
 
 /*
 * redirect stdout to file “filename”. If the file does not exist create one,
@@ -236,6 +248,8 @@ char *trim (char *cmd)
 
 int  main ()
 {
+    signal(SIGINT,SIG_IGN);  /* Handles SIGINT i.e Ctrl+C interrupt.Kills the currently executing process,
+                                and starts waiting for an input command. */
     while(1)
     {
         char sentence[100];
