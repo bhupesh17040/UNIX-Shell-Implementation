@@ -5,8 +5,8 @@
 #include<errno.h>
 #include<sys/wait.h>
 #include <unistd.h>
+#include <ctype.h>
 
-int lol;
 void redirect_output(char command[] , char fn[])
 {
     freopen(fn,"w",stdout);
@@ -109,6 +109,27 @@ void pipefn (char *const cmds[], int lenCmds)
 
 }
 
+char *trim(char *s)
+{
+    int i = 0;
+    int j = strlen ( s ) - 1;
+    int k = 0;
+    while ( isspace ( s[i] ) && s[i] != '\0' )
+    {
+        i++;
+    }
+    while ( isspace ( s[j] ) && j >= 0 )
+    {
+        j--;
+    }
+    while ( i <= j )
+    {
+        s[k++] = s[i++];
+    }
+    s[k] = '\0';
+    return s;
+}
+
 int  main()
 {
     while(1)
@@ -179,12 +200,12 @@ int  main()
         else
         {
             int i = 0;
-            char *p = strtok(sentence, "| \n");
+            char *p = strtok(sentence, "|");
             char *array[50];
             while (p != NULL)
             {
-                array[i++] = p;
-                p = strtok (NULL, "| \n");
+                array[i++] = trim(p);
+                p = strtok (NULL, "|");
             }
             int pid = fork();
             if (pid == 0)
