@@ -7,47 +7,131 @@
 #include <unistd.h>
 #include <ctype.h>
 
-void redirect_output(char command[] , char fn[])
+/*
+* redirect stdout to file “filename”. If the file does not exist create one,
+* otherwise, overwrite the existing file
+*/
+void redirectOutputToFile (char *file)
 {
-    freopen(fn,"w",stdout);
-    dup2(fileno(stdout), 1);
-    execlp(command,command,NULL);
-    fclose(stdout);
-    
+    int o = open(file, O_CREAT|O_TRUNC|O_WRONLY, 0644);
+    dup2(o, STDOUT_FILENO);
+    close(o);
 }
 
-void redirect_error(char command[] , char fn[])
+/*
+* redirect stderr to filename
+*/
+void redirectErrorToFile (char *file)
 {
-    freopen(fn,"w",stderr);
-    dup2(fileno(stderr), STDERR_FILENO);
-    execlp(command,command,NULL);
-    fclose(stderr);
-    
+    int o = open(file, O_CREAT|O_TRUNC|O_WRONLY, 0644);
+    dup2(o, STDERR_FILENO);
+    close(o);
 }
 
-void aredirect_output(char command[] , char fn[])
- {
-    freopen(fn,"a",stdout);
-    dup2(fileno(stdout), 1);
-    execlp(command,command,NULL);
-    fclose(stdout);
+/*
+* If the file already exists, appends the stdout output, otherwise, creates a new file.
+*/
+void appendOutputToFile (char *file)
+{
+    int o = open(file, O_CREAT|O_APPEND|O_WRONLY, 0644);
+    dup2(o, STDOUT_FILENO);
+    close(o);
+}
+
+/*
+* If the file already exists, appends the stderr output, otherwise, creates a new file.
+*/
+void appendErrorToFile (char *file)
+{
+    int o = open(file, O_CREAT|O_APPEND|O_WRONLY, 0644);
+    dup2(o, STDERR_FILENO);
+    close(o);
+}
+
+/*
+* Redirects stderr to stdout
+*/
+void redirectErrorToOutput ()
+{
+    dup2(STDOUT_FILENO, STDERR_FILENO);
+}
+
+/*
+* use file descriptor 0 (stdin) for filename. If command tries to read from
+* stdin, effectively it will read from filename.
+*/
+void redirectFileToInput (char *file)
+{
+    int o = open(file, O_RDONLY);
+    dup2(o, STDIN_FILENO);
+    close(o);
+}
+
+/*
+*
+*/
+int checkRedirection (char *p)
+{
+    int r = 0;
+    for(int i = 0; i < strlen(p); i++)
+    {
+        if (p[i] == '1')
+        {
+            if (p[i+1] == '>')
+            {
+                if (p[i+2] == '>')
+                {
+                    appendOutputToFile(p+i+3);
+                }
+                else
+                {
+                    redirectOutputToFile(p+i+2);
+                }
+                r = 1;
+                break;
+            }
+        }
+        else if (p[i] == '2')
+        {
+            if (p[i+1] == '>')
+            {
+                if (p[i+2] == '>')
+                {
+                    appendErrorToFile(p+i+3);
+                }
+                else if (p[i+2] == '&')
+                {
+                    redirectErrorToOutput();
+                }
+                else
+                {
+                    redirectErrorToFile(p+i+2);
+                }
+                r = 1;
+                break;
+            }
+        }
+        else if (p[i] == '>')
+        {
+            if (p[i+1] == '>')
+            {
+                appendOutputToFile(p+i+2);
+            }
+            else
+            {
+                redirectOutputToFile(p+i+1);
+            }
+            r = 1;
+            break;
+        }
+        else if (p[i] == '<')
+        {
+            redirectFileToInput(p+i+1);
+            r = 1;
+            break;
+        }
     }
-void redirect_error_to_out()
-{
-    dup2(1,2); // duplicates fd[1] to fd[2]
-}
-
-void redirectfromfile(char command[],char fn[])  // command<filename
-{
-	close(0);
-	freopen(fn,"r",stdin);
-	int pid;
-	pid=fork();
-	if(!pid)
-	{
-		execlp(command,command,NULL);
-	}
-	fclose(stdin);
+    return r;
 }
 
 /*
@@ -60,7 +144,6 @@ void pipefn (char *const cmds[], int lenCmds)
     int fd[2];
     int pid;
     int outputStorage = 0;
-
     for(int i = 0; i < lenCmds-1; i++)
     {
         if (pipe(fd) == -1)
@@ -81,10 +164,14 @@ void pipefn (char *const cmds[], int lenCmds)
             // assigned and atomically closes and replaces it if it's already taken.
             int j = 0;
             char *p = strtok(cmds[i], " ");
-            char *temp[3];
+            char *temp[10];
             while (p != NULL)
             {
-                temp[j++] = p;
+                int r = checkRedirection(p);
+                if (r == 0)
+                {
+                    temp[j++] = p;
+                }
                 p = strtok (NULL, " ");
             }
             temp[j] = NULL;
@@ -105,10 +192,14 @@ void pipefn (char *const cmds[], int lenCmds)
                 dup2(fd[0], 0);
                 int k = 0;
                 char *p = strtok(cmds[i+1], " ");
-                char *temp[3];
+                char *temp[10];
                 while (p != NULL)
                 {
-                    temp[k++] = p;
+                    int s = checkRedirection(p);
+                    if (s == 0)
+                    {
+                        temp[k++] = p;
+                    }
                     p = strtok (NULL, " ");
                 }
                 temp[k] = NULL;
@@ -116,14 +207,13 @@ void pipefn (char *const cmds[], int lenCmds)
             }
         }
     }
-    
-
 }
 
 /*
+* Trims provided string to remove leading and trailing whitespace.
 * Function referred from: cboard.cprogramming.com/c-programming/31839-trim-string-function-code.html
 */
-char *trim(char *cmd)
+char *trim (char *cmd)
 {
     int a = strlen ( cmd ) - 1;
     while ( isspace ( cmd[a] ) && a >= 0 )
@@ -144,7 +234,7 @@ char *trim(char *cmd)
     return cmd;
 }
 
-int  main()
+int  main ()
 {
     while(1)
     {
@@ -190,7 +280,7 @@ int  main()
         {
             int j=0;
             char *p1=strtok(sentence," \n");
-            char *a1[3];
+            char *a1[10];
             while(p1!=NULL)
             {
                 a1[j++]=p1;
@@ -203,12 +293,45 @@ int  main()
                     char e[100];
                     chdir(a1[y+1]);
                     printf("%s \n",getcwd(e,100));
-
                 }
                 else
                 {
-                    system(sentence);
+                    char *temp[] = {sentence, NULL};
+                    int pid = fork();
+                    if (pid == 0)
+                    {
+                        execvp(temp[0], temp);
+                    }
+                    else
+                    {
+                        wait(NULL);
+                    }
                 }
+            }
+        }
+        else if (countpipe == 0)
+        {
+            int pid = fork();
+            if (pid == 0)
+            {
+                int x = 0;
+                char *y = strtok(sentence, " ");
+                char *arr[10];
+                while (y != NULL)
+                {
+                    int r = checkRedirection(trim(y));
+                    if (r == 0)
+                    {
+                        arr[x++] = trim(y);
+                    }
+                    y = strtok (NULL, " ");
+                }
+                arr[x] = NULL;
+                execvp(arr[0], arr);
+            }
+            else
+            {
+                wait(NULL);
             }
         }
         else
