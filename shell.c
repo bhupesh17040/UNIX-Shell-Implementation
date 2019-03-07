@@ -255,7 +255,7 @@ int  main ()
         char sentence[100];
         printf("Shell$ ");
         fgets(sentence, 100, stdin);
-        if(strcmp(sentence,"exit")==0)
+        if(strcmp(trim(sentence),"exit")==0)
         {
             exit(0);
         }
